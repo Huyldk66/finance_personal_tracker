@@ -15,3 +15,6 @@ if __name__ == "__main__":
     window = FinanceApp()
     window.show()
     sys.exit(app.exec())
+
+
+# tién thiẹn support 
