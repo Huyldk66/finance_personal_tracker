@@ -1,0 +1,12 @@
+/tools
+/__pycache__
+/.vscode
+/.idea
+*.pyc
+
+# Google OAuth
+/token.json
+/credentials.json
+*.exe
+/build
+/dist

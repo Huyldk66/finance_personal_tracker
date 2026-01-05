@@ -1,0 +1,8 @@
+### code
+
+> cài thư viện ` pip install -r  requirements.txt`
+---
+> run  `python main.py`
+
+### 
+
