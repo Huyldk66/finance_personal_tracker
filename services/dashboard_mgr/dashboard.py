@@ -94,9 +94,7 @@ class SeasonalOverlay(QWidget):
             else: p.drawEllipse(QPointF(0,0), pt.size/2, pt.size/2)
             p.restore()
 
-# ======================
-# 3. CUSTOM WIDGETS
-# ======================
+
 class DashboardCard(QFrame):
     def __init__(self, title, value, icon, color, sub_text=""):
         super().__init__()
@@ -119,9 +117,7 @@ class DashboardCard(QFrame):
         lbl_icon = QLabel(icon); lbl_icon.setObjectName("Icon")
         layout.addLayout(vbox); layout.addStretch(); layout.addWidget(lbl_icon)
 
-# ======================
-# 4. MAIN DASHBOARD CLASS
-# ======================
+
 class MainDashboard(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -170,10 +166,8 @@ class MainDashboard(QMainWindow):
         charts_layout.addWidget(self.pie_view, 1); charts_layout.addWidget(self.bar_view, 2)
         main_layout.addLayout(charts_layout)
 
-        # --- 3. BOTTOM ROW (Table + ToDo) ---
         bottom_layout = QHBoxLayout()
         
-        # Left: Recent Transactions (Sử dụng dữ liệu từ App của bạn)
         grp_trans = QGroupBox("Giao dịch gần đây")
         grp_trans.setStyleSheet("QGroupBox { font-weight: bold; font-size: 14px; border: 1px solid #ccc; border-radius: 8px; margin-top: 10px; } QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 5px; }")
         v_trans = QVBoxLayout(grp_trans)
