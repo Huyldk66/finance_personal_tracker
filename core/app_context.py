@@ -12,19 +12,14 @@ except ImportError:
     print("⚠️ Không tìm thấy GoogleService. Một số tính năng Google sẽ bị vô hiệu hóa.")
 
 class AppContext(QObject):
-    """
-    Singleton Class quản lý trạng thái toàn cục của ứng dụng (Global State).
-    Chịu trách nhiệm: Theme, User Session, Global Settings, Google Calendar Integration.
-    """
+   
     _instance = None
 
-    # --- EXISTING SIGNALS ---
     theme_changed = pyqtSignal(str)
     user_state_changed = pyqtSignal(object)
     setting_changed = pyqtSignal(str, object)
     navigation_requested = pyqtSignal(int)
 
-    # --- NEW SIGNALS FOR GOOGLE CALENDAR ---
     google_login_state_changed = pyqtSignal(bool, str)  # (success, message)
     google_events_synced = pyqtSignal(str, list)        # (date_str, events)
 
@@ -55,9 +50,6 @@ class AppContext(QObject):
 
         print("✅ AppContext (Core) đã khởi động.")
 
-    # =========================================
-    # 1. QUẢN LÝ THEME
-    # =========================================
     @property
     def current_theme(self):
         return self._current_theme
@@ -68,9 +60,6 @@ class AppContext(QObject):
             self.theme_changed.emit(theme_key)
             print(f"🎨 AppContext: Đã đổi theme sang '{theme_key}'")
 
-    # =========================================
-    # 2. QUẢN LÝ USER (ĐĂNG NHẬP/XUẤT)
-    # =========================================
     @property
     def user_data(self):
         return self._user_data
@@ -85,9 +74,6 @@ class AppContext(QObject):
         self.user_state_changed.emit(None)
         print("👋 AppContext: User đã đăng xuất.")
 
-    # =========================================
-    # 3. QUẢN LÝ CÀI ĐẶT
-    # =========================================
     def get_setting(self, key, default=None):
         return self._settings.get(key, default)
 
@@ -97,17 +83,12 @@ class AppContext(QObject):
             self.setting_changed.emit(key, value)
             print(f"⚙️ AppContext: Setting '{key}' đổi thành {value}")
 
-    # =========================================
-    # 4. ĐIỀU HƯỚNG
-    # =========================================
     def navigate_to(self, page_index: int):
         self.navigation_requested.emit(page_index)
 
-    # =========================================
-    # 5. GOOGLE CALENDAR INTEGRATION (MỚI)
-    # =========================================
+
     def _ensure_google_service(self):
-        """Khởi tạo GoogleService nếu chưa có."""
+    
         if not HAS_GOOGLE_SERVICE:
             return None
         if self._google_service is None:
@@ -122,7 +103,7 @@ class AppContext(QObject):
 
         ok, msg = svc.authenticate()
         if ok:
-            # 🔥 LẤY NAME/EMAIL TỪ GOOGLE SERVICE (đã được lưu trong authenticate)
+            
             name = svc._user_name or "Người dùng Google"
             email = svc._user_email or "unknown@example.com"
             self.login({"name": name, "email": email, "source": "google"})
@@ -132,7 +113,6 @@ class AppContext(QObject):
         self.google_login_state_changed.emit(ok, msg)
 
     def google_logout(self):
-        """Xóa token và reset toàn bộ trạng thái Google."""
         from core._const import FILE_TOKEN
         if Path(FILE_TOKEN).exists():
             Path(FILE_TOKEN).unlink()
@@ -142,13 +122,13 @@ class AppContext(QObject):
         self.google_login_state_changed.emit(False, "Đã đăng xuất khỏi Google Calendar.")
 
     def is_google_logged_in(self) -> bool:
-        """Kiểm tra xem đã đăng nhập Google hợp lệ chưa."""
+        
         if not self._google_service:
             return False
         return self._google_service.is_authenticated()
 
     def fetch_google_events(self, date_str: str):
-        """Lấy sự kiện Google cho một ngày cụ thể (YYYY-MM-DD)."""
+        
         if not self.is_google_logged_in():
             return []
         events = self._google_service.fetch_events(date_str)
@@ -158,17 +138,17 @@ class AppContext(QObject):
 
     def create_google_event(self, summary: str, start_dt, end_dt, description: str = "",
                             popup_min=None, email_min=None):
-        """Tạo sự kiện mới trên Google Calendar."""
+        
         if not self.is_google_logged_in():
             return False, "Chưa đăng nhập Google Calendar."
         return self._google_service.create_event(summary, start_dt, end_dt, description, popup_min, email_min)
 
     def delete_google_event(self, event_id: str) -> bool:
-        """Xóa sự kiện Google theo ID."""
+       
         if not self.is_google_logged_in():
             return False
         return self._google_service.remove_event(event_id)
 
     def get_cached_google_events(self, date_str: str):
-        """Lấy sự kiện đã cache (nếu có), tránh gọi API nhiều lần."""
+       
         return self._google_events_cache.get(date_str, [])

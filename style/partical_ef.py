@@ -67,15 +67,12 @@ class SeasonalOverlay(QWidget):
         self.particles = []
         self.current_season = "spring"
         self.timer = QTimer(self)
-        self.timer.timeout.connect(self.update_animation)
-        
-        # --- FIX: Thêm dòng này để định nghĩa biến ---
+        self.timer.timeout.connect(self.update_animation)  
         self.initialized = False 
 
     def set_season(self, season):
         self.current_season = season
         self.particles = []
-        # Reset lại để tạo hạt mới đúng theo mùa
         self.init_particles()
 
     def init_particles(self):
@@ -84,7 +81,6 @@ class SeasonalOverlay(QWidget):
             self.particles = [Particle(self.width(), self.height(), self.current_season) for _ in range(count)]
             if not self.timer.isActive(): self.timer.start(20)
             
-            # --- FIX: Đánh dấu là đã khởi tạo ---
             self.initialized = True 
 
     def update_animation(self):

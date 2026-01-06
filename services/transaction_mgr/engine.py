@@ -47,10 +47,8 @@ class TransactionEngine:
 
     def save(self):
         try:
-            # Tạo thư mục nếu chưa có
             self.file_path.parent.mkdir(parents=True, exist_ok=True)
             
-            # Lấy tên trường từ Transaction Model (hoặc hardcode list cho chuẩn)
             fieldnames = ["id", "date", "category", "amount", "type", "role", 
                           "description", "expiry_date", "is_recurring", "cycle"]
             
@@ -58,7 +56,6 @@ class TransactionEngine:
                 writer = csv.DictWriter(f, fieldnames=fieldnames)
                 writer.writeheader()
                 for t in self._transactions:
-                    # Convert Object -> Dict
                     row = {
                         "id": t.id,
                         "date": t.date,
@@ -75,9 +72,6 @@ class TransactionEngine:
         except Exception as e:
             print(f"❌ Error saving transactions: {e}")
 
-    # ==========================
-    # CRUD METHODS
-    # ==========================
     def get_all(self) -> List[Transaction]:
         return self._transactions
 
@@ -96,9 +90,6 @@ class TransactionEngine:
         self._transactions = [t for t in self._transactions if t.id != tid]
         self.save()
 
-    # ==========================
-    # UTILS (Import/Export/Backup)
-    # ==========================
     def import_csv(self, path: str):
         try:
             with open(path, encoding="utf-8-sig") as f:
@@ -128,7 +119,6 @@ class TransactionEngine:
 
     def export_csv(self, path: str):
         if not path.endswith(".csv"): path += ".csv"
-        # Chỉ cần gọi lại hàm save nhưng đổi path tạm thời
         temp_engine = TransactionEngine(pathlib.Path(path))
         temp_engine._transactions = self._transactions
         temp_engine.save()
@@ -145,7 +135,6 @@ class TransactionEngine:
             return None
         
     def summary(self):
-            """Tính tổng thu chi cho Dashboard"""
             inc = sum(t.amount for t in self._transactions if t.type == "income")
             exp = sum(t.amount for t in self._transactions if t.type == "expense")
             return {"income": inc, "expense": exp, "balance": inc - exp}

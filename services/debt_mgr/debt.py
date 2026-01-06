@@ -12,7 +12,7 @@ from typing import List, Dict
 from core._const import DEBT_DATA, PAYMENT_LOG, SCHEDULE_FILE, THEMES_DEBT_PAGE
 
 from . import DebtEngine
-from models import Transaction # Import để tạo transaction trả nợ
+from models import Transaction 
 from models import Debt
 from core.data_manager import DataManager
 
@@ -21,7 +21,7 @@ from style import THEMES, SeasonalOverlay
 
 
 class DebtAIAdvisorPane(QWidget):
-    """Pane AI RAG – chỉ xử lý nợ – dễ gắn vào bất kỳ dialog nào"""
+
     def __init__(self, engine, parent=None):
         super().__init__(parent)
         self.engine = engine
@@ -31,7 +31,6 @@ class DebtAIAdvisorPane(QWidget):
     def _init_ui(self):
         lo = QVBoxLayout(self)
 
-        # Header
         header = QHBoxLayout()
         header.addWidget(QLabel("🤖 AI Tư vấn nợ"))
         header.addStretch()
@@ -40,17 +39,14 @@ class DebtAIAdvisorPane(QWidget):
         header.addWidget(self.btn_ask)
         lo.addLayout(header)
 
-        # Output
         self.output = QTextEdit(readOnly=True)
         self.output.setPlaceholderText("Nhấn “Hỏi AI” để nhận tư vấn, cảnh báo, gợi ý dựa trên dữ liệu nợ của bạn...")
         lo.addWidget(self.output)
 
-    # ---------- API chính ----------
     def ask_advice(self):
         self.output.clear()
         self.btn_ask.setEnabled(False)
 
-        # 1. Thu thập dữ liệu thật
         debts = self.engine.get_debts()
         if not debts:
             self.output.setHtml("<i>Không có dữ liệu nợ để phân tích.</i>")
@@ -62,7 +58,6 @@ class DebtAIAdvisorPane(QWidget):
         total_interest = sum(self._total_interest(d) for d in debts)
         overdue_count  = len([d for d in debts if d.is_overdue()])
 
-        # 2. Build prompt RAG – ngắn gọn, tiếng Việt
         prompt = f"""
 Bạn là chuyên gia tài chính cá nhân AI. Dựa trên dữ liệu nợ thật dưới đây, hãy:
 - Phân tích rủi ro (≤150 từ).
@@ -104,12 +99,6 @@ Lưu ý: Trả lời bằng tiếng Việt, ngắn gọn, thân thiện, không 
             return d.amount * ((1 + yearly_rate) ** (days / 365) - 1)
         else:
             return d.amount * yearly_rate * (days / 365)
-
-
-
-
-
-
 
 
 class DebtForm(QDialog):
@@ -311,11 +300,8 @@ class DebtStatsDialog(QDialog):
                 elif item.layout():
                     self._clear_layout(item.layout())
 
-    # ---------- Data Logic ----------
     def populate_data(self):
-            """Hàm này sẽ được gọi mỗi khi dữ liệu thay đổi"""
             
-            # 1. Xóa dữ liệu cũ trên giao diện trước khi vẽ mới
             self._clear_layout(self.stats_grid)
             self._clear_layout(self.charts_layout)
             

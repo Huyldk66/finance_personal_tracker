@@ -39,10 +39,6 @@ def get_lunar_string(date_obj):
             pass
     return ""
 
-
-# ======================
-# UI COMPONENTS (GIỮ NGUYÊN)
-# ======================
 class CalendarCell(QFrame):
     clicked = pyqtSignal(str)
 
@@ -181,10 +177,6 @@ class QuickGoogleDialog(QDialog):
             self.sb_mail.value() if self.sb_mail.value() != -1 else None
         )
 
-
-# ======================
-# MAIN CALENDAR MANAGER (HOÀN THIỆN)
-# ======================
 class CalendarMgr(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -305,12 +297,10 @@ class CalendarMgr(QMainWindow):
         right_l.addWidget(btn_push)
         main.addWidget(right, 1)
 
-        # --- MENU BAR ---
         self.google_action = self.menuBar().addAction("Đang kiểm tra...", self.placeholder_handler)
 
     def placeholder_handler(self):
-        pass  # sẽ được thay thế sau
-
+        pass  
     # --- GOOGLE MENU MANAGEMENT ---
     def update_google_menu(self):
         if self.google_action is None:

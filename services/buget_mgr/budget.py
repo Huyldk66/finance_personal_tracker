@@ -53,8 +53,6 @@ class BudgetMgr(QMainWindow):
             print(f"Theme '{key}' không tồn tại!")
             return
 
-        # 2. Xây dựng chuỗi QSS (Qt Style Sheet)
-        # Chúng ta map các biến màu vào các thành phần UI tương ứng
         stylesheet = f"""
             /* --- CẤU HÌNH CHUNG --- */
             QMainWindow, QWidget {{
@@ -135,13 +133,8 @@ class BudgetMgr(QMainWindow):
             }}
         """
 
-        # 3. Áp dụng Style Sheet lên toàn bộ Main Window
         self.setStyleSheet(stylesheet)
 
-        # 4. Cập nhật cho các Widget con đặc biệt (nếu chúng cần xử lý logic vẽ riêng)
-        # Nếu tab_personal và tab_group chỉ là Widget chứa Button/Label thông thường
-        # thì dòng self.setStyleSheet ở trên đã lo hết, không cần gọi update_theme bên dưới.
-        # Tuy nhiên, nếu chúng có biểu đồ (Chart) cần redraw lại màu, hãy giữ lại dòng này:
         if hasattr(self, 'tab_personal') and hasattr(self.tab_personal, 'update_theme'):
             self.tab_personal.update_theme(theme)
             

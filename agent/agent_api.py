@@ -1,19 +1,13 @@
-#!/usr/bin/env python3
-"""
-BotChatAgentAPI – phiên bản thay thế chính xác từ script gốc đang chạy được
-"""
 
 import json
 import uuid
 import requests
 from typing import Iterable
 
-# ---------- CẤU HÌNH GIỐNG HỆT SCRIPT GỐC ----------
 CHAT_ID   = "08bd0d8a-6c85-49b7-9fd0-e0de478c585c"
 PARENT_ID = None
 TOKEN     = ("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYyZTRmMTI1LTJhYWEtNDNhNS1hYzNmLTkxMDUyMjVlZWNhNiIsImxhc3RfcGFzc3dvcmRfY2hhbmdlIjoxNzY3NjE3NTg5LCJleHAiOjE3NjgyMjIzOTJ9.gU9TdhtvzyrcBPek7CsPlBMFXDhgqlJAJDhY5Em3T78")
 
-# ✅ Sửa: BỎ KHOẢNG TRẮNG THỪA TRONG URL
 URL = f"https://chat.qwen.ai/api/v2/chat/completions?chat_id={CHAT_ID}"
 # ------------------------------------------------------------
 

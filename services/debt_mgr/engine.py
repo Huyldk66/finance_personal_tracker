@@ -26,7 +26,6 @@ class DebtEngine:
                 if not text: return
                 data = json.loads(text)
                 
-                # Xử lý trường hợp file cũ lưu dạng Dict {"debts": []} hoặc List []
                 raw_list = data if isinstance(data, list) else data.get("debts", [])
                 
                 self._debts = [Debt(**d) for d in raw_list]
@@ -45,9 +44,6 @@ class DebtEngine:
         except Exception as e:
             print(f"❌ DebtEngine Save Error: {e}")
 
-    # ==========================
-    # CRUD
-    # ==========================
     def next_id(self) -> int:
         return max([d.id for d in self._debts], default=0) + 1
 
@@ -76,14 +72,10 @@ class DebtEngine:
         they = sum(d.outstanding() for d in self._debts if d.side == "THEY_OWE")
         return {"i_owe": owe, "they_owe": they, "net": they - owe}
 
-    # ==========================
-    # IMPORT / EXPORT / BACKUP
-    # ==========================
     def export_csv(self, path: str):
         try:
             if not path.endswith(".csv"): path += ".csv"
             
-            # Lấy header chuẩn từ Model thay vì từ data (tránh lỗi khi list rỗng)
             fieldnames = [field for field in Debt.__annotations__.keys()]
             
             with open(path, "w", encoding="utf-8-sig", newline="") as f:
@@ -102,14 +94,13 @@ class DebtEngine:
                 reader = csv.DictReader(f)
                 imported_count = 0
                 for r in reader:
-                    # Xử lý an toàn cho boolean và None
                     is_compound = str(r.get("compound", "")).lower() in ("true", "1", "yes")
                     due = r.get("due_date")
                     if not due or due == "None" or due == "":
                         due = None
 
                     new_debt = Debt(
-                        id=int(r.get("id", self.next_id() + imported_count)), # Tự sinh ID nếu trùng
+                        id=int(r.get("id", self.next_id() + imported_count)), 
                         counterparty=r["counterparty"],
                         side=r["side"],
                         amount=float(r["amount"]),
@@ -130,7 +121,6 @@ class DebtEngine:
             raise e
 
     def backup(self):
-        """Hàm này CẦN PHẢI CÓ để DataManager gọi"""
         try:
             BACKUP_DIR.mkdir(parents=True, exist_ok=True)
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
