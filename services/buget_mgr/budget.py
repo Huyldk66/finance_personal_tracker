@@ -5,6 +5,7 @@ from PyQt6.QtGui import *
 
 from ..setting import SoundManager
 from . import *
+from core._const import THEMES_DEBT_PAGE
 
 
 
@@ -44,14 +45,108 @@ class BudgetMgr(QMainWindow):
         self.tabs.addTab(self.tab_group, "👥 Quỹ Nhóm & Dự Án")
         self.tabs.setStyleSheet(""" QTabBar::tab { height: 40px; width: 200px; font-weight: bold; font-size: 14px; } QTabWidget::pane { border-top: 2px solid #bdc3c7; } """)
 
-    def apply_theme(self, key):...
-    #     t = THEMES[key]
-    #     self.setStyleSheet(f"QMainWindow {{ background-color: {t['bg']}; }}")
-    #     self.tab_personal.update_theme(t); self.tab_group.update_theme(t)
-    #     self.tabs.setStyleSheet(f""" QTabBar::tab {{ background: #e0e0e0; color: #555; height: 40px; width: 200px; font-weight: bold; }} QTabBar::tab:selected {{ background: {t['btn']}; color: white; }} QTabWidget::pane {{ border: 2px solid {t['btn']}; }} """)
-    #     btn_style = f"QPushButton {{ background-color: {t['btn']}; color: white; border-radius: 5px; padding: 6px; font-weight: bold; }}"
-    #     self.tab_personal.setStyleSheet(btn_style)
+    def apply_theme(self, key):
+        # 1. Lấy dictionary màu từ key (spring, summer, autumn, winter)
+        theme = THEMES_DEBT_PAGE.get(key)
+        
+        if not theme:
+            print(f"Theme '{key}' không tồn tại!")
+            return
 
+        # 2. Xây dựng chuỗi QSS (Qt Style Sheet)
+        # Chúng ta map các biến màu vào các thành phần UI tương ứng
+        stylesheet = f"""
+            /* --- CẤU HÌNH CHUNG --- */
+            QMainWindow, QWidget {{
+                background-color: {theme['bg_primary']};
+                color: {theme['text_main']};
+                font-family: 'Segoe UI', Arial, sans-serif;
+            }}
+
+            /* --- BUTTONS (Dùng màu bg_secondary làm chủ đạo) --- */
+            QPushButton {{
+                background-color: {theme['bg_secondary']};
+                color: {theme['text_light']};
+                border: 1px solid {theme['bg_secondary']};
+                border-radius: 6px;
+                padding: 8px 16px;
+                font-weight: bold;
+            }}
+            QPushButton:hover {{
+                background-color: {theme['btn_hover']};
+                border-color: {theme['btn_hover']};
+            }}
+            QPushButton:pressed {{
+                background-color: {theme['accent']}; /* Nhấn vào sẽ ra màu Accent */
+            }}
+
+            /* --- TABS (QTabWidget & QTabBar) --- */
+            QTabWidget::pane {{
+                border: 2px solid {theme['bg_secondary']}; /* Viền bao quanh nội dung tab */
+                background-color: {theme['bg_primary']};
+                border-radius: 4px;
+            }}
+            
+            QTabBar::tab {{
+                background: {theme['bg_primary']};     /* Tab chưa chọn trùng màu nền */
+                color: {theme['text_main']};           /* Chữ màu chính */
+                border: 1px solid {theme['accent']};   /* Viền mỏng màu Accent */
+                border-bottom: none;
+                padding: 8px 20px;
+                margin-right: 2px;
+                border-top-left-radius: 4px;
+                border-top-right-radius: 4px;
+                min-width: 120px;
+            }}
+
+            QTabBar::tab:selected {{
+                background: {theme['bg_secondary']};   /* Tab đang chọn nổi bật */
+                color: {theme['text_light']};          /* Chữ trắng */
+                font-weight: bold;
+            }}
+            
+            QTabBar::tab:hover:!selected {{
+                background: {theme['accent']};         /* Hover vào tab chưa chọn */
+                color: {theme['text_light']};
+            }}
+
+            /* --- INPUTS (QLineEdit, QTextEdit...) --- */
+            QLineEdit, QTextEdit, QSpinBox {{
+                background-color: #FFFFFF;             /* Nền input luôn trắng cho dễ đọc */
+                color: {theme['text_main']};
+                border: 1px solid {theme['accent']};   /* Viền input dùng màu Accent */
+                border-radius: 4px;
+                padding: 4px;
+            }}
+            QLineEdit:focus {{
+                border: 2px solid {theme['bg_secondary']}; /* Focus vào input thì viền đậm hơn */
+            }}
+            
+            /* --- LABELS --- */
+            QLabel {{
+                color: {theme['text_main']};
+            }}
+            
+            /* Label tiêu đề (nếu bạn có set objectName='title') */
+            QLabel#title {{
+                color: {theme['bg_secondary']};
+                font-size: 18px;
+                font-weight: bold;
+            }}
+        """
+
+        # 3. Áp dụng Style Sheet lên toàn bộ Main Window
+        self.setStyleSheet(stylesheet)
+
+        # 4. Cập nhật cho các Widget con đặc biệt (nếu chúng cần xử lý logic vẽ riêng)
+        # Nếu tab_personal và tab_group chỉ là Widget chứa Button/Label thông thường
+        # thì dòng self.setStyleSheet ở trên đã lo hết, không cần gọi update_theme bên dưới.
+        # Tuy nhiên, nếu chúng có biểu đồ (Chart) cần redraw lại màu, hãy giữ lại dòng này:
+        if hasattr(self, 'tab_personal') and hasattr(self.tab_personal, 'update_theme'):
+            self.tab_personal.update_theme(theme)
+            
+        if hasattr(self, 'tab_group') and hasattr(self.tab_group, 'update_theme'):
+            self.tab_group.update_theme(theme)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

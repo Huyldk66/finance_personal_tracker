@@ -713,29 +713,45 @@ class GroupFundMgr(QMainWindow):
     def apply_theme(self, key):
         self.current_theme_key = key
         t = THEMES[key]
+        
+        # Áp dụng màu nền cho các vùng chính
         self.dashboard_widget.setStyleSheet(f"background-color: {t['bg']};")
         self.editor_widget.setStyleSheet(f"background-color: {t['bg']};")
         
-        # Global Stats Style
+        # Global Stats Style (Giữ nguyên vì text trắng trên nền đậm là đẹp)
         self.global_stats_frame.setStyleSheet(f"""
             QFrame#stats {{ background-color: {t['sec']}; border-radius: 10px; padding: 10px; }}
-            QLabel {{ color: white; font-weight: bold; font-size: 16px; }}
+            QLabel {{ color: white; font-weight: bold; font-size: 16px; background-color: transparent; }}
         """)
 
-        # Sidebar Style
+        # --- SỬA PHẦN SIDEBAR TẠI ĐÂY ---
         self.sidebar.setStyleSheet(f"""
-            QFrame#sidebar {{ background-color: rgba(255,255,255,0.8); border-right: 1px solid {t['sec']}; }}
-            QLabel {{ color: {t['txt']}; }}
-            QGroupBox {{ border: 1px solid {t['sec']}; border-radius: 5px; margin-top: 10px; font-weight: bold; color: {t['sec']}; }}
+            QFrame#sidebar {{ 
+                background-color: {t['bg']}; /* Đổi từ trắng sang màu nền theme */
+                border-right: 1px solid {t['sec']}; 
+            }}
+            QLabel {{ 
+                color: {t['txt']}; 
+                background-color: transparent; /* Quan trọng: Xóa nền của label */
+                padding: 2px; /* Thêm chút đệm cho thoáng chữ */
+            }}
+            QGroupBox {{ 
+                border: 1px solid {t['sec']}; 
+                border-radius: 5px; 
+                margin-top: 10px; 
+                font-weight: bold; 
+                color: {t['sec']};
+                background-color: transparent; /* Đảm bảo GroupBox cũng trong suốt */
+            }}
         """)
 
         # Buttons
         btn_style = f"QPushButton {{ background-color: {t['btn']}; color: white; border-radius: 4px; padding: 6px; }}"
         for btn in self.findChildren(QPushButton): 
-            if "Về Trang Chủ" not in btn.text(): btn.setStyleSheet(btn_style)
+            if "Về Trang Chủ" not in btn.text(): 
+                btn.setStyleSheet(btn_style)
 
         self.refresh_dashboard()
-
 
 
 
