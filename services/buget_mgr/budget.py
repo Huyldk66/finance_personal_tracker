@@ -26,7 +26,6 @@ class BudgetMgr(QMainWindow):
         self.combo_theme.currentTextChanged.connect(self.apply_theme) # signal 
         toolbar.addWidget(lbl_theme); toolbar.addWidget(self.combo_theme)
         
-        # --- Volume Control ---
         toolbar.addSeparator()
         lbl_vol = QLabel("  🔊 Nhạc nền: ")
         self.sld_vol = QSlider(Qt.Orientation.Horizontal)
@@ -46,7 +45,7 @@ class BudgetMgr(QMainWindow):
         self.tabs.setStyleSheet(""" QTabBar::tab { height: 40px; width: 200px; font-weight: bold; font-size: 14px; } QTabWidget::pane { border-top: 2px solid #bdc3c7; } """)
 
     def apply_theme(self, key):
-        # 1. Lấy dictionary màu từ key (spring, summer, autumn, winter)
+    
         theme = THEMES_DEBT_PAGE.get(key)
         
         if not theme:

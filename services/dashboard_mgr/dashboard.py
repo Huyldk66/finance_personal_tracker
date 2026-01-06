@@ -10,13 +10,8 @@ from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 from PyQt6.QtCharts import *
 
-# --- IMPORT CORE CỦA BẠN ---
-# Đảm bảo bạn đã có file core/data_manager.py
 from core.data_manager import DataManager 
 
-# ======================
-# 1. CẤU HÌNH & PATH
-# ======================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FILE_TODOS = os.path.join(BASE_DIR, "data", "todos.json") # File lưu việc cần làm
 
@@ -27,7 +22,6 @@ THEMES_DASH = {
     "winter": {"name": "Đông", "bg": "#ECEFF1", "sec": "#263238", "acc": "#90A4AE", "txt": "#37474F"}
 }
 
-# Helper: Load JSON
 def load_json(path):
     if os.path.exists(path):
         try:
@@ -38,9 +32,6 @@ def load_json(path):
 def format_money(val):
     return f"{int(val):,}"
 
-# ======================
-# 2. VISUAL EFFECTS (Particle & Overlay)
-# ======================
 class Particle:
     def __init__(self, w, h, mode="spring"):
         self.mode = mode; self.reset(w, h, True)
@@ -124,7 +115,6 @@ class MainDashboard(QMainWindow):
         self.setWindowTitle("Finance Master - Tổng Hợp")
         self.resize(1100, 700)
         
-        # --- KẾT NỐI DATA MANAGER (Của bạn) ---
         self.data_mgr = DataManager.instance()
         self.data_mgr.data_changed.connect(self.refresh_data)
 
@@ -179,7 +169,6 @@ class MainDashboard(QMainWindow):
         self.table_recent.setStyleSheet("border: none; background: rgba(255,255,255,0.6);")
         v_trans.addWidget(self.table_recent)
         
-        # Right: Todo List (Đọc từ file JSON)
         grp_todo = QGroupBox("Cần làm / Mua sắm")
         grp_todo.setStyleSheet("QGroupBox { font-weight: bold; font-size: 14px; border: 1px solid #ccc; border-radius: 8px; margin-top: 10px; } QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 5px; }")
         v_todo = QVBoxLayout(grp_todo)
@@ -187,8 +176,8 @@ class MainDashboard(QMainWindow):
         self.list_todo.setStyleSheet("border: none; font-size: 13px; background: rgba(255,255,255,0.6);")
         v_todo.addWidget(self.list_todo)
         
-        bottom_layout.addWidget(grp_trans, 2) # Table chiếm 2 phần
-        bottom_layout.addWidget(grp_todo, 1)  # Todo chiếm 1 phần
+        bottom_layout.addWidget(grp_trans, 2) 
+        bottom_layout.addWidget(grp_todo, 1)  
         
         main_layout.addLayout(bottom_layout)
 
@@ -202,12 +191,8 @@ class MainDashboard(QMainWindow):
         self.refresh_data()
 
     def refresh_data(self):
-        """Cập nhật toàn bộ dữ liệu Dashboard từ DataManager (Singleton)"""
-        
-        # --- LẤY DỮ LIỆU TỪ DATA MANAGER ---
         data = self.data_mgr.get_dashboard_summary()
         
-        # Trích xuất các chỉ số tài chính
         inc = data.get("income", 0)
         exp = data.get("expense", 0)
         bal = data.get("balance", 0)
@@ -216,15 +201,13 @@ class MainDashboard(QMainWindow):
         saved = data.get("savings", 0)
         net_worth = data.get("net_worth", 0)
         recent = data.get("recent_transactions", [])
-        todos_list = data.get("calendar_todos", [])   # ← ĐÃ ĐỔI TÊN
-        notes_list = data.get("calendar_notes", [])   # ← MỚI THÊM
+        todos_list = data.get("calendar_todos", [])   
+        notes_list = data.get("calendar_notes", [])   
 
-        # --- CẬP NHẬT TODO & NOTES (PHÂN TÁCH RÕ RÀNG) ---
         self.list_todo.clear()
         has_todos = len(todos_list) > 0
         has_notes = len(notes_list) > 0
 
-        # --- PHẦN 1: CẦN LÀM / MUA SẮM ---
         if has_todos:
             title_item = QListWidgetItem("📋 CẦN LÀM / MUA SẮM")
             title_item.setForeground(QColor("#2c3e50"))
@@ -314,7 +297,6 @@ class MainDashboard(QMainWindow):
         chart_bar.setBackgroundBrush(QBrush(QColor(255, 255, 255, 0)))
         self.bar_view.setChart(chart_bar)
 
-        # --- CẬP NHẬT BẢNG GIAO DỊCH GẦN ĐÂY ---
         self.table_recent.setRowCount(0)
         for r in recent:
             row = self.table_recent.rowCount()

@@ -10,11 +10,9 @@ from PyQt6.QtGui import *
 
 
 from models._tran import Transaction
-from models._budget import Goal # Import model Goal
+from models._budget import Goal 
 from core.data_manager import DataManager
-# ======================
-# 1. CẤU HÌNH THEME
-# ======================
+
 THEMES = {
     "spring": {
         "name": "Xuân", "bg": "#FFF8E1", "sec": "#b30000", "acc": "#FFD700", "txt": "#5D4037", "btn": "#d91e18"
@@ -40,26 +38,20 @@ class GoalCard(QFrame):
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setFixedSize(280, 160)
         
-        # ---------------------------------------------------------
-        # 1. XỬ LÝ DỮ LIỆU THÔNG MINH (DICT -> OBJECT)
-        # ---------------------------------------------------------
+        
         if isinstance(goal_data, dict):
-            # Nếu truyền vào là Dict (do code cũ hoặc load json raw)
-            # Tự động convert sang Object Goal để tránh lỗi .name
+           
             try:
-                # Lọc key để tránh lỗi nếu dict có trường lạ
                 valid_keys = Goal.__init__.__code__.co_varnames
                 clean_data = {k: v for k, v in goal_data.items() if k in valid_keys}
                 self.goal = Goal(**clean_data)
                 
-                # Gán lại members (vì dataclass init có thể không xử lý sâu list dict)
                 if "members" in goal_data:
                     self.goal.members = goal_data["members"]
             except Exception as e:
                 print(f"⚠️ GoalCard Error: {e}")
                 self.goal = Goal(name="Lỗi Dữ Liệu", target=1)
         else:
-            # Nếu đã là Object chuẩn -> Dùng luôn
             self.goal = goal_data
 
         # ---------------------------------------------------------
@@ -84,44 +76,42 @@ class GoalCard(QFrame):
         
         # --- Header: Icon + Name ---
         header = QHBoxLayout()
-        icon = QLabel("💰") # Bạn có thể thay bằng self.goal.icon nếu model có
+        icon = QLabel("💰") 
         icon.setStyleSheet("font-size: 24px; border: none; background: transparent;")
         
         lbl_name = QLabel(self.goal.name) 
         lbl_name.setStyleSheet(f"font-size: 16px; font-weight: bold; color: {theme['txt']}; border: none; background: transparent;")
-        lbl_name.setWordWrap(True) # Cho phép xuống dòng nếu tên dài
-        
+        lbl_name.setWordWrap(True) 
         header.addWidget(icon)
         header.addWidget(lbl_name)
         header.addStretch()
         layout.addLayout(header)
         
-        # --- Stats Calculation ---
+        
         target = self.goal.target if self.goal.target else 1
-        # Tính tổng contribution từ list members (list dict)
+        
         current = sum(m.get("contribution", 0) for m in self.goal.members)
         
-        # Tính % hiển thị
+       
         real_pct = int(current / target * 100)
-        display_pct = min(100, real_pct) # Bar chỉ chạy max 100
+        display_pct = min(100, real_pct) 
         
-        # Logic màu sắc
+        
         status_icon = ""
         if real_pct >= 100:
-            bar_color = "#9b59b6" # Tím (Vượt chỉ tiêu)
+            bar_color = "#9b59b6" 
             status_icon = "🔥"
             money_color = "#8e44ad"
         else:
             bar_color = theme['sec']
             money_color = theme['sec']
 
-        # --- Label Tiền ---
+    
         lbl_money = QLabel(f"{current:,.0f}k / {target:,.0f}k {status_icon}")
         lbl_money.setStyleSheet(f"color: {money_color}; font-weight: bold; border: none; background: transparent; font-size: 14px;")
         lbl_money.setAlignment(Qt.AlignmentFlag.AlignRight)
         layout.addWidget(lbl_money)
         
-        # --- Progress Bar ---
         pbar = QProgressBar()
         pbar.setValue(display_pct)
         pbar.setFixedHeight(12)
@@ -132,7 +122,6 @@ class GoalCard(QFrame):
         """)
         layout.addWidget(pbar)
         
-        # --- Footer ---
         mem_count = len(self.goal.members)
         lbl_mem = QLabel(f"👥 {mem_count} thành viên • {real_pct}%")
         lbl_mem.setStyleSheet("color: gray; font-size: 11px; border: none; background: transparent; font-style: italic;")
@@ -142,28 +131,19 @@ class GoalCard(QFrame):
         if event.button() == Qt.MouseButton.LeftButton:
             self.clicked.emit(self.index)
 
-# ======================
-# 3. GRAPHICS ITEMS (Card Thành Viên)
-# ======================
+
 class MemberNode(QGraphicsItem):
-    """
-    Node đại diện cho một thành viên trong Quỹ Nhóm.
-    - Có khả năng hiển thị Thu/Chi/Đóng góp.
-    - Có menu ngữ cảnh để Sửa/Xóa/Chi tiêu.
-    - Tự động đồng bộ với DataManager nếu role là 'owner'.
-    """
+
     def __init__(self, name, income=0, expense=0, contribution=0, role="member"):
         super().__init__()
         self.name = name
         self.income = income
         self.expense = expense
-        self.contribution = contribution # Số dư hiện tại của người này trong quỹ
-        self.role = role # "owner" (Tôi) hoặc "member" (Người khác)
+        self.contribution = contribution 
+        self.role = role 
         
-        # Kết nối tới DataManager
         self.data_mgr = DataManager.instance()
 
-        # Cấu hình Graphics Item
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
         self.setAcceptHoverEvents(True)
@@ -175,12 +155,10 @@ class MemberNode(QGraphicsItem):
         return self._rect
     
     def paint(self, painter, option, widget):
-        """Vẽ Node lên màn hình"""
-        # 1. Xác định màu sắc dựa trên Role
+        
         is_owner = (self.role == "owner")
         is_selected = self.isSelected()
         
-        # Viền: Vàng đậm nếu là Owner, Xám nếu là Member. Xanh nếu đang chọn.
         if is_selected:
             border_color = QColor("#2980b9") # Xanh dương khi chọn
             border_width = 3
@@ -204,18 +182,13 @@ class MemberNode(QGraphicsItem):
         painter.setPen(QPen(border_color, border_width))
         painter.drawRoundedRect(self._rect, 10, 10)
         
-        # 4. Vẽ Header (Chứa tên)
         painter.setBrush(header_bg)
         painter.setPen(Qt.PenStyle.NoPen)
-        # Vẽ phần trên bo góc, phần dưới phẳng để nối với body
         path = QPainterPath()
         path.addRoundedRect(QRectF(-70, -50, 140, 30), 10, 10)
         painter.drawPath(path)
-        # Che góc bo dưới của header để nó liền mạch
         painter.drawRect(QRectF(-70, -30, 140, 10)) 
         
-        # 5. Vẽ Text (Tên & Số liệu)
-        # Tên
         painter.setPen(QColor("#2c3e50"))
         painter.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
         painter.drawText(QRectF(-70, -50, 140, 30), Qt.AlignmentFlag.AlignCenter, self.name)
@@ -235,15 +208,12 @@ class MemberNode(QGraphicsItem):
             painter.drawText(QRectF(50, -60, 20, 20), Qt.AlignmentFlag.AlignCenter, "👑")
 
     def contextMenuEvent(self, event):
-        """Menu chuột phải"""
         menu = QMenu()
         menu.setStyleSheet("QMenu { background: white; border: 1px solid gray; font-size: 12px; }")
         
-        # Action: Chi tiêu
         action_spend = menu.addAction("💸 Chi tiêu / Rút quỹ")
         action_spend.triggered.connect(self.spend_money)
         
-        # Action: Nạp thêm (Optional)
         action_income = menu.addAction("💰 Nạp thêm")
         action_income.triggered.connect(self.add_income)
 
@@ -255,56 +225,48 @@ class MemberNode(QGraphicsItem):
         
         menu.exec(event.screenPos())
 
-    # ==================================================
-    # LOGIC CHÍNH: CHI TIÊU
-    # ==================================================
     def spend_money(self):
-        """Xử lý khi thành viên chi tiền"""
-        # 1. Kiểm tra số dư trước
+       
         if self.contribution <= 0:
             QMessageBox.warning(None, "Không thể chi tiêu", f"{self.name} không còn tiền trong quỹ (Số dư: {self.contribution}k).")
             return
 
-        # 2. Nhập số tiền
         amt_k, ok = QInputDialog.getInt(None, "Chi tiêu quỹ", 
                                       f"Nhập số tiền {self.name} chi (Tối đa {self.contribution}k):", 
-                                      0, 0, self.contribution, 10) # Max set là self.contribution
+                                      0, 0, self.contribution, 10) 
         if not ok or amt_k <= 0: return
         
-        # Kiểm tra lại lần nữa cho chắc
         if amt_k > self.contribution:
             QMessageBox.warning(None, "Lỗi", "Số tiền chi vượt quá số dư hiện tại!")
             return
 
-        # 3. Nhập lý do
         note, ok2 = QInputDialog.getText(None, "Nội dung", "Lý do chi tiêu:")
         if not ok2: return
         if not note: note = "Chi tiêu quỹ chung"
 
-        # 4. Cập nhật dữ liệu
-        self.expense += amt_k           # Tăng tổng chi để theo dõi
-        self.contribution -= amt_k      # Giảm số dư
+        self.expense += amt_k           
+        self.contribution -= amt_k    
         
         self.update() 
         self.scene().views()[0].main_window.update_detail_stats()
 
-        # 5. Đồng bộ ví thật (Nếu là Owner)
+
         if self.role == "owner":
             self._sync_transaction_expense(amt_k, note)
 
 
     def _sync_transaction_expense(self, amt_k, note):
-        """Hàm private: Tạo Transaction thật trong DataManager"""
+       
         try:
-            real_amount = amt_k * 1000 # Đổi từ k -> đồng
+            real_amount = amt_k * 1000 
             
             new_trans = Transaction(
                 id=str(uuid.uuid4()),
                 date=date.today().isoformat(),
-                category="Chi tiêu Quỹ Nhóm", # Danh mục riêng để dễ track
+                category="Chi tiêu Quỹ Nhóm", 
                 amount=real_amount,
-                type="expense",               # Dòng tiền ra
-                role="CaNhan",                # Vai trò ví chính
+                type="expense",               
+                role="CaNhan",               
                 description=f"[Quỹ Nhóm] {note}",
                 is_recurring=False
             )
@@ -316,22 +278,16 @@ class MemberNode(QGraphicsItem):
         except Exception as e:
             QMessageBox.warning(None, "Lỗi đồng bộ", f"Không thể tạo giao dịch: {e}")
 
-    # ==================================================
-    # CÁC LOGIC KHÁC (Sửa, Xóa, Nạp)
-    # ==================================================
     def add_income(self):
-        """Nạp thêm tiền vào quỹ (Logic ngược lại với Spend)"""
         amt_k, ok = QInputDialog.getInt(None, "Nạp quỹ", "Số tiền nạp (k):", 0, 0, 1000000, 50)
         if ok and amt_k > 0:
             self.income += amt_k
             self.contribution += amt_k
             self.update()
             self.scene().views()[0].main_window.update_detail_stats()
-            # Tương tự: Nếu là owner thì có thể tạo Transaction type="expense" (Nạp tiền đi)
-            # Tùy bạn muốn triển khai hay không.
+            
 
     def edit_info(self):
-        """Hộp thoại sửa thông tin thủ công"""
         d = QDialog()
         d.setWindowTitle("Sửa thông tin")
         l = QFormLayout(d)
@@ -368,18 +324,15 @@ class MemberNode(QGraphicsItem):
             
             self.role = cb_role.currentText()
             
-            self.update() # Vẽ lại (nếu đổi role thì màu sẽ đổi)
+            self.update() 
             self.scene().views()[0].main_window.update_detail_stats()
 
     def delete_node(self):
-        """Xóa node khỏi scene"""
-        # Gọi về Main Window để xóa khỏi list quản lý
+       
         self.scene().views()[0].main_window.remove_member(self)
         # Xóa khỏi màn hình
         self.scene().removeItem(self)
-# ======================
-# 4. CUSTOM VIEW
-# ======================
+
 class EditorGraphicsView(QGraphicsView):
     def __init__(self, scene, main_window):
         super().__init__(scene)
@@ -399,11 +352,8 @@ class GroupFundMgr(QMainWindow):
         self.setWindowTitle("Quản Lý Ngân Sách - Đa Quỹ")
         self.resize(1200, 800)
         
-        # --- KẾT NỐI DATA MANAGER ---
         self.data_mgr = DataManager.instance()
         
-        # [QUAN TRỌNG] TRỎ THẲNG VÀO LIST CỦA ENGINE (Tham chiếu)
-        # Thay vì self.goals = [], ta lấy list từ engine
         self.goals = self.data_mgr.goals 
         
         self.current_goal_index = -1
@@ -422,7 +372,6 @@ class GroupFundMgr(QMainWindow):
         self.setup_editor()
         self.stack.addWidget(self.editor_widget)
 
-        # Nếu chưa có dữ liệu nào trong JSON, tạo mẫu (và lưu luôn)
         if not self.goals:
             self.create_sample_data()
         
@@ -430,8 +379,7 @@ class GroupFundMgr(QMainWindow):
         self.refresh_dashboard()
 
     def create_sample_data(self):
-        """Tạo dữ liệu mẫu và lưu xuống ổ cứng thông qua DataManager"""
-        # Tạo Object Goal
+       
         g1 = Goal(name="Quỹ Du Lịch", target=20000)
         g2 = Goal(name="Quỹ Ăn Uống", target=5000)
         
@@ -439,18 +387,6 @@ class GroupFundMgr(QMainWindow):
         self.data_mgr.add_goal(g1)
         self.data_mgr.add_goal(g2)
 
-
-
-    # def load_initial_data(self):
-    #     # Nếu bạn muốn load từ DataManager.budget_engine.goals thì viết ở đây
-    #     # Hiện tại dùng sample data nếu list rỗng
-    #     if not self.goals:
-    #         self.goals.append({"name": "Quỹ Du Lịch", "target": 20000, "members": []})
-    #         self.goals.append({"name": "Quỹ Ăn Uống", "target": 5000, "members": []})
-
-    # ==========================
-    # DASHBOARD SETUP
-    # ==========================
     def setup_dashboard(self):
         layout = QVBoxLayout(self.dashboard_widget)
         layout.setContentsMargins(20, 20, 20, 20)
@@ -516,8 +452,6 @@ class GroupFundMgr(QMainWindow):
             row, col = 0, 0
             max_cols = 3
 
-            # Lặp qua các Goal OBJECT (chứ không phải dict)
-            # print(self.goals)cls
             
             for idx, goal_obj in enumerate(self.goals):
                 card = GoalCard(idx, goal_obj, t) # Truyền Object vào Card
@@ -532,7 +466,6 @@ class GroupFundMgr(QMainWindow):
                 col += 1
                 if col >= max_cols: col = 0; row += 1
                 
-                # Tính tổng tiền (members là list dict bên trong Object Goal)
                 current_fund = sum(m["contribution"] for m in goal_obj.members)
                 total_money += current_fund
 
@@ -562,9 +495,6 @@ class GroupFundMgr(QMainWindow):
                 self.data_mgr.delete_goal(goal_to_del.id)
                 self.refresh_dashboard()
 
-    # ==========================
-    # EDITOR SETUP (DETAIL VIEW)
-    # ==========================
     def setup_editor(self):
         layout = QHBoxLayout(self.editor_widget)
         layout.setContentsMargins(0,0,0,0)
@@ -632,14 +562,12 @@ class GroupFundMgr(QMainWindow):
             self.ed_name.setText(goal.name)
             self.ed_target.setText(str(goal.target))
             
-            # Load Scene
             self.scene.clear()
             self.members_in_scene = []
             
-            # goal.members là list dict (đã định nghĩa trong Model)
+           
             for m in goal.members:
                 role = m.get("role", "member")
-                # Tạo node đồ họa
                 node = MemberNode(
                     name=m["name"], 
                     income=m["income"], 
@@ -701,9 +629,6 @@ class GroupFundMgr(QMainWindow):
         self.refresh_dashboard()
         self.stack.setCurrentIndex(0)
 
-    # ==========================
-    # LOGIC FUNCTIONS
-    # ==========================
     def create_btn(self, text, func):
         btn = QPushButton(text)
         btn.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -811,8 +736,7 @@ class GroupFundMgr(QMainWindow):
 
 
     def add_member_logic(self, name, cont):
-        """Logic thêm thành viên chung"""
-        # Tự động set role nếu tên là 'Tôi'
+       
         role = "member"
         if name in ["Tôi", "Me", "Admin"]:
             role = "owner"
@@ -972,7 +896,7 @@ class GroupFundMgr(QMainWindow):
             f"{status_text}"
         )
         
-        self.ed_pbar.setValue(min(100, max(0, pct))) # Giới hạn bar từ 0-100 để không lỗi
+        self.ed_pbar.setValue(min(100, max(0, pct))) 
         self.ed_pbar.setFormat(f"{pct}%")
         self.ed_pbar.setStyleSheet(f"""
             QProgressBar {{ border: 1px solid #bdc3c7; border-radius: 5px; background: #ecf0f1; text-align: center; font-weight: bold; color: #333; }}

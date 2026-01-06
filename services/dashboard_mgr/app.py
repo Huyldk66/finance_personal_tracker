@@ -732,9 +732,3 @@ class FinanceApp(QMainWindow):
             self.profile_widget.lbl_name.setText("Login Tet Account")
             self.profile_widget.lbl_status.setText("Guest Mode")
             self.profile_widget.avatar.setText("🐉")
-# if __name__ == "__main__":
-#     app = QApplication(sys.argv)
-#     app.setFont(QFont("Segoe UI", 10))
-#     window = FinanceApp()
-#     window.show()
-#     sys.exit(app.exec())

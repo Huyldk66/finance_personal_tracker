@@ -661,16 +661,12 @@ class DebtManager(QMainWindow):
         bar_series.attachAxis(axis_x)
         self.bar_view.setChart(chart2)
 
-    # ------------------- ACTIONS -------------------
     def add_debt(self):
-        # Truyền engine vào dialog nếu dialog cần check duplicate ID (optional)
         form = DebtForm(parent=self, theme_key=self.current_theme)
         if form.exec():
-            # Lấy ID mới từ engine
             new_id = self.data_manager.debt_engine.next_id()
             debt = form.get_debt(new_id)
             
-            # GỌI DATA MANAGER
             self.data_manager.add_debt(debt)
 
     def edit_selected(self):
@@ -694,7 +690,6 @@ class DebtManager(QMainWindow):
                 self.data_manager.delete_debt(_id)
 
     def quick_pay(self, debt_id: int):
-        # Tìm debt trong list của manager
         debt = next((d for d in self.data_manager.debts if d.id == debt_id), None)
         if not debt or debt.outstanding() <= 0: return
 
@@ -704,48 +699,39 @@ class DebtManager(QMainWindow):
         )
         if not ok or amount <= 0: return
 
-        # 1. Cập nhật Debt
         debt.paid_back += amount
         self.data_manager.update_debt(debt)
 
-        # 2. Tự động ghi log vào Transaction (GỌI QUA DATA MANAGER)
         self._create_repay_transaction(debt, amount)
 
-        # 3. Ghi log trả nợ riêng (nếu cần)
         self._log_payment(debt_id, amount)
         
         QMessageBox.information(self, "OK", f"Đã trả {amount:,.0f} đ\nĐã ghi sổ chi tiêu!")
 
     def _create_repay_transaction(self, debt: Debt, amount: float):
-        """
-        Tự động tạo giao dịch Thu hoặc Chi dựa trên loại nợ
-        """
-        import uuid # Import thêm thư viện này ở đầu file nếu chưa có
         
-        # 1. Xác định Loại giao dịch (Thu hay Chi)
+        import uuid 
+        
         if debt.side == "IOWE":
-            # Mình đi trả nợ -> Mất tiền -> CHI TIÊU
+            
             trans_type = "expense"
             category = "Trả nợ"
-            role = "Cá nhân" # Người chi là mình
+            role = "Cá nhân" 
             desc = f"Trả nợ cho {debt.counterparty} ({debt.purpose})"
         else:
-            # Người ta trả nợ mình -> Nhận tiền -> THU NHẬP
             trans_type = "income"
             category = "Thu nợ"
-            role = debt.counterparty # Người chi là đối tác
+            role = debt.counterparty 
             desc = f"Thu nợ từ {debt.counterparty} ({debt.purpose})"
 
-        # 2. Tạo ID ngẫu nhiên
         new_id = str(uuid.uuid4())
         
-        # 3. Tạo Object Transaction
         trans = Transaction(
             id=new_id,
             date=date.today().isoformat(),
-            category=category,      # "Trả nợ" hoặc "Thu nợ"
+            category=category,     
             amount=amount,
-            type=trans_type,        # "expense" hoặc "income" <--- QUAN TRỌNG
+            type=trans_type,      
             role=role,
             description=desc,
             expiry_date="",
@@ -753,19 +739,14 @@ class DebtManager(QMainWindow):
             cycle="Tháng"
         )
         
-        # 4. Gửi sang DataManager
         self.data_manager.add_transaction(trans)
         
-        # Log ra console để kiểm tra (tùy chọn)
         print(f"✅ Auto Transaction: {trans_type.upper()} - {amount:,.0f} - {desc}")
 
-
-    # ------------------- UTILS (Import/Export/Stats) -------------------
     def import_csv(self):
         path, _ = QFileDialog.getOpenFileName(self, "Chọn file CSV", "", "CSV Files (*.csv)")
         if path:
             try:
-                # Gọi Engine thông qua Manager
                 count = self.data_manager.debt_engine.import_csv(path)
                 self.data_manager.notify_change()
                 QMessageBox.information(self, "OK", f"Import thành công {count} khoản nợ!")
@@ -783,8 +764,6 @@ class DebtManager(QMainWindow):
         dlg = DebtStatsDialog(parent=self, theme_key=self.current_theme) 
         dlg.exec()
 
-
-    # ------------------- HELPER FUNCTIONS -------------------
     def _selected_debt(self) -> Debt | None:
         row = self.table.currentRow()
         if row < 0: return None
